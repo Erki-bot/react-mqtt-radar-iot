@@ -1,0 +1,47 @@
+import React from "react";
+import logo from "./logo.svg";
+import "./App.css";
+import * as mqtt from "precompiled-mqtt";
+import Home from "./components/Home";
+import Test from "./components/Test";
+import AreaChart from "./components/AreaChart";
+import { RadarChart } from "./components/RadarChart";
+let protocol = "ws";
+let host = "localhost";
+let port = 8083;
+let clientId = "erki0";
+let { username, password } = { username: "erki-test", password: "erki" };
+const url = `${protocol}://${host}:${port}/mqtt`;
+const options = {
+  clientId,
+  username,
+  password,
+  clean: true,
+  reconnectPeriod: 1000, // ms
+  connectTimeout: 30 * 1000, // ms
+};
+const client = mqtt.connect(url, options);
+client.on("connect", () => {
+  console.log("Connected to the broker");
+});
+client.subscribe("esp32/distance");
+client.on("message", (topic: string, payload: Buffer) => {
+  console.log(payload.toString());
+});
+function App() {
+  const names = [
+    "Erki",
+    "Josiane",
+    "Mireille",
+    "Rafi",
+    "Afoutoutou",
+    "Adjagbalou",
+  ];
+  return (
+    <>
+      <RadarChart />
+    </>
+  );
+}
+
+export default App;
