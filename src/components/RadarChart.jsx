@@ -26,14 +26,10 @@ export function RadarChart() {
   const [ti, setTi] = useState();
   useEffect(() => {
     let val = values(360);
-    console.log(val);
     setData(val);
-    setTimeout(() => setTi(52), 3000);
-  }, []);
-  useEffect(() => {
     mqttClient.connect(
       {
-        host: "localhost",
+        host: "192.168.100.31",
         protocol: "ws",
         port: 8083,
         username: "Erki",
@@ -52,8 +48,8 @@ export function RadarChart() {
       //   console.log(JSON.parse("{'name':'esp32'}"));
       //   console.log(payload.toString());
       let incomingDatas = JSON.parse(payload.toString());
-      console.log(incomingDatas);
-      data &&
+      // console.log(incomingDatas);
+      
         setData((old) => {
           let datas = old.datas;
           let angle = parseInt(incomingDatas.angle);
@@ -92,7 +88,7 @@ export function RadarChart() {
             label: "# of Votes",
             data: data.datas,
             // backgroundColor: "#ffffff",
-            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            backgroundColor: "rgba(255, 99, 132)",
             borderColor: "#ffffff",
             // borderColor: "rgba(255, 99, 132, 1)",
             borderWidth: 1,

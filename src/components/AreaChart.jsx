@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +12,8 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { faker } from "@faker-js/faker";
+import MQTTClient from "../mqtt/MQTTClient";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -34,49 +36,90 @@ const options = {
       text: "Chart.js Line Chart",
     },
   },
-  scales: {
-    x: { type: "linear", min: 0, max: 10 },
-    y: { type: "linear", min: 0, max: 10 },
-  },
 };
-export default function AreaChart() {
-  let coor = coordinates(10);
 
-  const labels = coor.x;
-  // const labels = ["January", "February", "March", "April", "May", "June", "July"];
 
-  const data = {
-    labels,
-    datasets: [
+let mqttClient = new MQTTClient();
+export function AreaChart() {
+  const [data, setData] = useState();
+
+  // useEffect(() => {
+  //   let val = initialValues(0, 180);
+  //   setData(val);
+  // }, []);
+  useEffect(() => {
+    let val = initialValues(0, 180);
+    setData(val);
+    mqttClient.connect(
       {
-        fill: true,
-        label: "Dataset 2",
-        data: coor.y,
-        // data: labels.map(() => faker.datatype.number({ min: 0, max: 1000 })),
-        borderColor: "rgb(53, 162, 235)",
-        backgroundColor: "rgba(53, 162, 235, 0.5)",
+        host: "192.168.100.31",
+        protocol: "ws",
+        port: 8083,
+        username: "Erki",
+        password: "erki",
+        clientId: `id_${parseInt(`${Math.random() * 1000}`)}`,
       },
-    ],
-  };
+      () => console.log("Connected to the broker"),
+      () => console.log("Reconnecting to broker"),
+      (error) => console.log(`Something failled ==> ${error?.message}`)
+    );
 
-  function coordinates(radius) {
-    let x = [];
-    let y = [];
-    for (let i = 0; i < radius; i++) {
-      // x.push(radius * Math.cos((i * Math.PI) / 180));
-      // y.push(radius * Math.sin((i * Math.PI) / 180));
-      x.push(i);
-      y.push(Math.sqrt(radius * radius - i * i));
-    }
-    return {
-      x,
-      y,
-    };
-  }
+    mqttClient.subscribe("esp32/distance");
+    mqttClient.onMessage((topic, payload) => {
+      // payload = '{"name": "esp32"}'
 
-  return (
-    // <div style={{ margin: "auto", width: 200 }}>
-    <Line options={options} data={data} style={{ with: 25 }} />
-    // </div>
+      //   console.log(JSON.parse("{'name':'esp32'}"));
+      //   console.log(payload.toString());
+      let incomingDatas = JSON.parse(payload.toString());
+      console.log(incomingDatas);
+
+      // if (data) {
+        setData((old) => {
+          if (old) {
+            let values = old.values;
+            let angle = parseInt(incomingDatas.angle);
+            // angle < 90 ? (angle += 270) : (angle -= 90);
+            values[angle] = parseInt(incomingDatas.distance);
+            return {
+              labels: old.labels,
+              values,
+            };
+          }
+        });
+      // }
+    });
+    return () => mqttClient.disconnect();
+  }, []);
+  return data ? (
+    <Line
+      options={options}
+      data={{
+        labels: data.labels,
+        datasets: [
+          {
+            fill: true,
+            label: "Dataset 2",
+            data: data.values,
+            borderColor: "rgb(53, 162, 235)",
+            backgroundColor: "rgba(53, 162, 235, 0.5)",
+          },
+        ],
+      }}
+    />
+  ) : (
+    <></>
   );
+}
+
+function initialValues(min, max) {
+  let labels = [];
+  let values = [];
+  for (let i = min; i <= max; i++) {
+    labels.push(i);
+    values.push(20);
+  }
+  return {
+    labels,
+    values,
+  };
 }
