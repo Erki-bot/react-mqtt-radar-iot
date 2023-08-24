@@ -5,7 +5,7 @@ function Test({ radarDatas }) {
     series: [{ name: "Distance", data: [0] }],
     categories: [0],
   });
-  // const [datas, setDatas] = useState();
+  const [dataSet, setDataSet] = useState({ 0: 0 });
 
   useEffect(() => {
     let initValues = values(180);
@@ -22,52 +22,19 @@ function Test({ radarDatas }) {
         categories: initValues.abs,
       };
     });
-
-    // setTimeout(() => {
-    //   setDatas((old) => {
-    //     const oldSeries = old?.series[0];
-    //     let da = oldSeries.data;
-    //     da[50] = 2;
-    //     return {
-    //       series: [
-    //         {
-    //           ...oldSeries,
-    //           data: da,
-    //         },
-    //       ],
-    //       categories: initValues.abs,
-    //     };
-    //   });
-    //   console.log("Updated");
-    // }, 3000);
   }, []);
 
   useEffect(() => {
     if (radarDatas?.data && datas.series) {
-      setDatas((old) => {
-        const oldSeries = old?.series[0];
-        let data = oldSeries.data;
-        let angle = Number(radarDatas.data.angle);
-
-        data[angle] = Number(radarDatas.data.distance);
-        return {
-          series: [
-            {
-              ...oldSeries,
-              data,
-            },
-          ],
-          categories: old.categories,
-        };
-      });
+      let oldSeries = {
+        ...dataSet,
+        [radarDatas.data.angle]: radarDatas.data.distance,
+      };
+      setDataSet(oldSeries);
+      if (radarDatas.data.distance === 0) console.log(radarDatas.data.distance);
     }
   }, [radarDatas]);
 
-  // useEffect(() => {
-  //   console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-  //   console.log(datas);
-  //   console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-  // }, [datas]);
   function values(points) {
     let abs = [];
     let ord = [];
@@ -94,7 +61,7 @@ function Test({ radarDatas }) {
   //     };
   //   });
   // }, [radarDatas]);
-  return datas ? (
+  return dataSet ? (
     <ReactApexChart
       options={{
         chart: {
@@ -105,11 +72,11 @@ function Test({ radarDatas }) {
           enabled: false,
         },
         stroke: {
-          // curve: "smooth",
+          curve: "stepline",
         },
         xaxis: {
           type: "category",
-          categories: datas.categories,
+          categories: Object.keys(dataSet),
           overwriteCategories: true,
         },
         // tooltip: {
@@ -117,9 +84,10 @@ function Test({ radarDatas }) {
         //     format: "dd/MM/yy HH:mm",
         //   },
         // },
+        // series: { data: Object.values(dataSet) },
       }}
-      series={datas.series}
-      type="area"
+      series={[{ data: Object.values(dataSet) }]}
+      // type="area"
       // height={350}
       // width={500}
     />

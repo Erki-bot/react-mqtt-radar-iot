@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { RadarChart } from "./components/RadarChart";
 import { RadarDist } from "./components/RadarDist";
-import Test from "./components/Test";
+import Test2 from "./components/Test2";
 import TempChart from "./components/project2/TempChart";
 import MQTTClient from "./mqtt/MQTTClient";
 import Tab from "react-bootstrap/Tab";
@@ -13,6 +13,7 @@ import HumChart from "./components/project2/HumChart";
 import { hu } from "@faker-js/faker";
 import GasChart from "./components/project2/GasChart";
 import Status from "./components/Status";
+import Test from "./components/Test";
 const mqttClient = new MQTTClient();
 function App() {
   const [tempDatas, setTempDatas] = useState<any>();
@@ -107,20 +108,23 @@ function App() {
         id="uncontrolled-tab-example"
         className="mb-3"
       >
-        <Tab eventKey="project1" title="Projet 1">
-          <Status project={"Projet 1"} status={project1} />
+        <Tab eventKey="project1" title="Station Météo">
+          <Status project={"Station Météo"} status={project1} />
           <Container>
             <TempChart tempDatas={tempDatas} />
             <HumChart humDatas={humDatas} />
             <GasChart gasData={gasData} />
           </Container>
         </Tab>
-        <Tab eventKey="project2" title="Projet 2">
+        <Tab eventKey="project2" title="Radar">
           <Status project={"Projet 2"} status={project2} />
-          <Test radarDatas={radarDatas} />
+          {/* <Test radarDatas={radarDatas} /> */}
+          {/* <Test radarDatas={radarDatas} />
         </Tab>
         <Tab eventKey="all" title="Tous">
           {/* <RadarDist radarDatas={tempDatas} /> */}
+          {/* <Test2 radarDatas={radarDatas}/> */}
+          <RadarDist radarDatas={radarDatas} />
         </Tab>
       </Tabs>
       {/* <AreaChart /> */}
@@ -158,6 +162,7 @@ function App() {
             Port du broker{" "}
             <span className="font-style-italic">(par défaut 8083)</span>
           </Form.Text>
+          <br />
           <Form.Label className="">Protocol</Form.Label>
           <Form.Control
             type="text"

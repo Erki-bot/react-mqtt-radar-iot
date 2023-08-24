@@ -11,8 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { faker } from "@faker-js/faker";
-import MQTTClient from "../mqtt/MQTTClient";
+import "./radar.css";
 
 ChartJS.register(
   CategoryScale,
@@ -24,83 +23,71 @@ ChartJS.register(
   Filler,
   Legend
 );
-
 const options = {
   responsive: true,
   plugins: {
     legend: {
       position: "top",
+      labels: {
+        color: "#ffffff",
+      },
     },
     title: {
       display: true,
       text: "Chart.js Line Chart",
     },
   },
+  scales: {
+    x: {
+      color: "#ffffff",
+    },
+  },
 };
+export function RadarDist({ radarDatas }) {
+  const [dataSet, setDataSet] = useState({ 0: 0 });
 
-let mqttClient = new MQTTClient();
-export function RadarDist({radarDatas}) {
-  const [data, setData] = useState();
-
+  useEffect(() => {
+    if (radarDatas?.data) {
+      let oldSeries = {
+        ...dataSet,
+        [radarDatas.data.angle]: radarDatas.data.distance,
+      };
+      setDataSet(oldSeries);
+      if (radarDatas.data.distance === 0) console.log(radarDatas.data.distance);
+    }
+  }, [radarDatas]);
   // useEffect(() => {
   //   let val = initialValues(0, 180);
   //   setData(val);
   // }, []);
-  useEffect(() => {
-    let val = initialValues(0, 180);
-    setData(val);
-    mqttClient.connect(
-      {
-        host: "192.168.100.31",
-        protocol: "ws",
-        port: 8083,
-        username: "Erki",
-        password: "erki",
-        clientId: `id_${parseInt(`${Math.random() * 1000}`)}`,
-      },
-      () => console.log("Connected to the broker"),
-      () => console.log("Reconnecting to broker"),
-      (error) => console.log(`Something failled ==> ${error?.message}`)
-    );
 
-    mqttClient.subscribe("esp32/distance");
-    mqttClient.onMessage((topic, payload) => {
-      // payload = '{"name": "esp32"}'
-
-      //   console.log(JSON.parse("{'name':'esp32'}"));
-      //   console.log(payload.toString());
-      let incomingDatas = JSON.parse(payload.toString());
-      console.log(incomingDatas);
-
-      // if (data) {
-      setData((old) => {
-        if (old) {
-          let values = old.values;
-          let angle = parseInt(incomingDatas.angle);
-          // angle < 90 ? (angle += 270) : (angle -= 90);
-          values[angle] = parseInt(incomingDatas.distance);
-          return {
-            labels: old.labels,
-            values,
-          };
-        }
-      });
-      // }
-    });
-    return () => mqttClient.disconnect();
-  }, []);
-  return data ? (
+  return dataSet ? (
     <Line
-      options={options}
+      // style={{ backgroundColor: "#0000ff" }}
+      className="mt-5"
+      options={{
+        ...options,
+        plugins: {
+          customCanvaBackgroundColor: {
+            color: "lightGreen",
+          },
+        },
+      }}
+      color="rgba(53, 162, 235)"
       data={{
-        labels: data.labels,
+        labels: Object.keys(dataSet),
         datasets: [
           {
-            fill: true,
-            label: "Dataset 2",
-            data: data.values,
-            borderColor: "rgb(53, 162, 235)",
-            backgroundColor: "rgba(53, 162, 235, 0.5)",
+            fill: {
+              target: "origin",
+              above: "rgba(255, 255, 255)",
+              // below: "rgba(53, 162, 235)",
+            },
+            label: "Cartograhie",
+            data: Object.values(dataSet),
+
+            // borderColor: "rgb(53, 0, 235)",
+            // backgroundColor: "rgba(53, 162, 235)",
           },
         ],
       }}
@@ -108,17 +95,4 @@ export function RadarDist({radarDatas}) {
   ) : (
     <></>
   );
-}
-
-function initialValues(min, max) {
-  let labels = [];
-  let values = [];
-  for (let i = min; i <= max; i++) {
-    labels.push(i);
-    values.push(20);
-  }
-  return {
-    labels,
-    values,
-  };
 }

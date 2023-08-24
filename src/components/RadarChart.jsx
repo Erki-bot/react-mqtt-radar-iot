@@ -20,73 +20,30 @@ ChartJS.register(
   Legend
 );
 
-let mqttClient = new MQTTClient();
-export function RadarChart() {
-  const [data, setData] = useState();
-  const [ti, setTi] = useState();
+export function RadarChart({ radarDatas }) {
+  const [dataSet, setDataSet] = useState({ 0: 0 });
+
   useEffect(() => {
-    let val = values(360);
-    setData(val);
-    mqttClient.connect(
-      {
-        host: "192.168.100.31",
-        protocol: "ws",
-        port: 8083,
-        username: "Erki",
-        password: "erki",
-        clientId: `id_${parseInt(Math.random() * 1000)}`,
-      },
-      () => console.log("Connected to the broker"),
-      () => console.log("Reconnecting to broker"),
-      (error) => console.log(`Something failled ==> ${error.message}`)
-    );
-
-    mqttClient.subscribe("esp32/distance");
-    mqttClient.onMessage((topic, payload) => {
-      // payload = '{"name": "esp32"}'
-
-      //   console.log(JSON.parse("{'name':'esp32'}"));
-      //   console.log(payload.toString());
-      let incomingDatas = JSON.parse(payload.toString());
-      // console.log(incomingDatas);
-      
-        setData((old) => {
-          let datas = old.datas;
-          let angle = parseInt(incomingDatas.angle);
-          angle < 90 ? (angle += 270) : (angle -= 90);
-          datas[angle] = parseInt(incomingDatas.distance);
-          return {
-            labels: old.labels,
-            datas,
-          };
-        });
-    });
-    return () => mqttClient.disconnect();
-  }, []);
-  function values(points) {
-    let labels = [];
-    let datas = [];
-    for (let i = 0; i < points; i++) {
-      labels.push(``);
-      if (i > points / 4 && i < (3 * points) / 4) {
-        datas.push(0);
-      } else {
-        datas.push(50);
-      }
+    if (radarDatas?.data) {
+      let oldSeries = {
+        ...dataSet,
+        [radarDatas.data.angle]: radarDatas.data.distance,
+      };
+      setDataSet(oldSeries);
+      if (radarDatas.data.distance === 0) console.log(radarDatas.data.distance);
     }
-    return {
-      labels,
-      datas,
-    };
-  }
-  return data ? (
+  }, [radarDatas]);
+  return (
     <Radar
       data={{
-        labels: data.labels,
+        // labels: data.labels,
         datasets: [
           {
             label: "# of Votes",
-            data: data.datas,
+            data: {
+              labels: Object.keys(dataSet),
+              values: Object.values(dataSet),
+            },
             // backgroundColor: "#ffffff",
             backgroundColor: "rgba(255, 99, 132)",
             borderColor: "#ffffff",
@@ -96,7 +53,5 @@ export function RadarChart() {
         ],
       }}
     />
-  ) : (
-    <></>
   );
 }
