@@ -38,9 +38,8 @@ const options = {
   },
 };
 
-
 let mqttClient = new MQTTClient();
-export function AreaChart() {
+export function RadarDist({radarDatas}) {
   const [data, setData] = useState();
 
   // useEffect(() => {
@@ -74,18 +73,18 @@ export function AreaChart() {
       console.log(incomingDatas);
 
       // if (data) {
-        setData((old) => {
-          if (old) {
-            let values = old.values;
-            let angle = parseInt(incomingDatas.angle);
-            // angle < 90 ? (angle += 270) : (angle -= 90);
-            values[angle] = parseInt(incomingDatas.distance);
-            return {
-              labels: old.labels,
-              values,
-            };
-          }
-        });
+      setData((old) => {
+        if (old) {
+          let values = old.values;
+          let angle = parseInt(incomingDatas.angle);
+          // angle < 90 ? (angle += 270) : (angle -= 90);
+          values[angle] = parseInt(incomingDatas.distance);
+          return {
+            labels: old.labels,
+            values,
+          };
+        }
+      });
       // }
     });
     return () => mqttClient.disconnect();

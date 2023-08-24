@@ -33,7 +33,7 @@ type MQTTConfig = {
 };
 
 class MQTTClient {
-  private client: mqtt.MqttClient | undefined;
+  private client: mqtt.Client | undefined;
 
   connect(
     config: MQTTConfig,
@@ -51,14 +51,22 @@ class MQTTClient {
       reconnectPeriod: 1000, // ms
       connectTimeout: 30 * 1000, // ms
     };
-    this.client = mqtt.connect(url, options);
+    console.log(url);
+    try {
+      this.client = mqtt.connect(url, options);
+    } catch (e: any) {}
+    // this.client.on("disconnect", () => console.log("client disconnected"));
+    // this.client.on("close", () => console.log("client closed"));
+    // this.client.on("disconnect", () => console.log("client disconnected"));
     if (successCalback) this.onConnect(successCalback);
-    if (reconnectCalback) this.onConnect(reconnectCalback);
+    if (reconnectCalback) this.onRecconnect(reconnectCalback);
     if (failledCalback) this.onError(failledCalback);
   }
 
-  disconnect() {
+  disconnect(cb?: () => void) {
     this.client?.end(true);
+    this.client = undefined;
+    // if (cb) this.client?.on("close", cb);
   }
   onConnect(calback: (packet?: mqtt.IConnectPacket) => void) {
     this.client?.on("connect", calback);
@@ -81,6 +89,9 @@ class MQTTClient {
 
   onMessage(calback: (topic: string, payload: Buffer) => void) {
     this.client?.on("message", calback);
+  }
+  status() {
+    return this.client?.connected;
   }
 }
 
